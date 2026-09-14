@@ -24,7 +24,7 @@ function WordNode({ word }) {
       {syllables.map((syl, i) => (
         <span key={i}>
           {i > 0 && '-'}
-          {i === word.accentSyllableIndex ? (
+          {syllables.length > 1 && i === word.accentSyllableIndex ? (
             <span className="accent-syllable">{syl}</span>
           ) : (
             syl
