@@ -227,7 +227,12 @@ https://www.ksvox.net/
               </span>
             </div>
 
-            <div className="flex items-center justify-center gap-2 flex-wrap">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <img
+                src="/logo.png"
+                alt="K's VOX APP"
+                className="h-12 w-12 md:h-14 md:w-14 flex-shrink-0"
+              />
               <h1 className="text-3xl md:text-4xl font-black font-vintageTitle tracking-wider text-white">
                 英語歌唱お助けAI
               </h1>
@@ -505,30 +510,37 @@ https://www.ksvox.net/
               </span>
             </div>
 
-            <div className="relative overflow-hidden rounded-xl bg-slate-900 border border-gray-800 p-3.5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-lg bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                    <i className="fa-solid fa-play text-2xl text-white"></i>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded">
-                      PLAYLIST
-                    </span>
-                    <h4 className="text-sm font-bold text-white">再生リスト: 「洋楽を歌おう」</h4>
-                    <p className="text-xs text-gray-400">プロメソッドで学ぶ実践洋楽歌唱トレーニング</p>
-                  </div>
-                </div>
-
-                <a
-                  href="https://youtube.com/playlist?list=PLtNoF8CCU5z3WnkCN1-QDOCsJUwVJYhv3&si=N-S7n3UIHixgoQuT"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto text-center px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg transition shadow flex items-center justify-center gap-1.5 flex-shrink-0"
-                >
-                  <i className="fa-brands fa-youtube"></i> 再生リストを視聴
-                </a>
+            <div className="relative overflow-hidden rounded-xl bg-slate-900 border border-gray-800 p-3.5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded">
+                  PLAYLIST
+                </span>
+                <h4 className="text-sm font-bold text-white">再生リスト: 「洋楽を歌おう」</h4>
               </div>
+              <p className="text-xs text-gray-400">プロメソッドで学ぶ実践洋楽歌唱トレーニング</p>
+
+              <div
+                className="relative w-full rounded-lg overflow-hidden border border-gray-800"
+                style={{ paddingBottom: '42%' }}
+              >
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/videoseries?list=PLtNoF8CCU5z3WnkCN1-QDOCsJUwVJYhv3"
+                  title="K's VOX 再生リスト: 洋楽を歌おう"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
+              </div>
+
+              <a
+                href="https://youtube.com/playlist?list=PLtNoF8CCU5z3WnkCN1-QDOCsJUwVJYhv3&si=N-S7n3UIHixgoQuT"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-center px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg transition shadow flex items-center justify-center gap-1.5"
+              >
+                <i className="fa-brands fa-youtube"></i> 再生リストを視聴
+              </a>
             </div>
           </div>
 
@@ -541,7 +553,7 @@ https://www.ksvox.net/
             <div className="pr-banner-bg bg-vintage-card rounded-[14px] p-4 flex items-center justify-between gap-3 relative z-10">
               <div className="space-y-1 relative z-10">
                 <span className="text-[10px] font-black tracking-widest bg-red-600 text-white px-2 py-0.5 rounded shadow">
-                  門弟制ボーカルスクール
+                  お試しレッスン随時申込受付中！
                 </span>
                 <h3 className="text-sm md:text-base font-extrabold text-white group-hover:text-vintage-neonYellow transition leading-snug drop-shadow-md">
                   本気で歌が上手くなりたいなら、
