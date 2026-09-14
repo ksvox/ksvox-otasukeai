@@ -1,0 +1,90 @@
+body {
+  background-color: #0e1117;
+  font-family: 'Inter', 'M PLUS Rounded 1c', sans-serif;
+  color: #e2e8f0;
+}
+
+/* Neon Glow Effects */
+.neon-text-pink {
+  text-shadow: 0 0 5px #ff2a75, 0 0 10px #ff2a75, 0 0 20px #ff2a75, 0 0 40px #ff0055;
+}
+.neon-text-cyan {
+  text-shadow: 0 0 5px #00f0ff, 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+}
+
+/* Real Glass Neon Tube Style */
+.neon-tube-border {
+  border: 3px solid #ff2a75;
+  box-shadow:
+    0 0 5px #fff,
+    inset 0 0 5px #fff,
+    0 0 12px #ff2a75,
+    inset 0 0 12px #ff2a75,
+    0 0 25px #ff0055,
+    inset 0 0 25px #ff0055;
+}
+
+/* Vintage Badge & Board Styling */
+.vintage-panel {
+  background: linear-gradient(145deg, #181d28, #10131b);
+  border: 2px solid #2d3748;
+  position: relative;
+}
+.vintage-panel::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* PR Banner Background Image Customization Container */
+.pr-banner-bg {
+  background-size: cover;
+  background-position: center;
+}
+
+/* Content word / accent syllable / slash mark styling (JSで組み立てる装飾) */
+.content-word {
+  text-decoration: underline;
+  text-decoration-color: #ff2a75;
+  text-decoration-thickness: 2.5px;
+  text-underline-offset: 3px;
+  font-weight: 700;
+}
+.accent-syllable {
+  font-weight: 900;
+  color: #b91c1c;
+  background-color: #fee2e2;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.slash-mark {
+  color: #0284c7;
+  font-weight: 700;
+  margin: 0 2px;
+}
+
+/* Retro Diner Tag Button Active state */
+.tempo-btn.active {
+  background-color: #ff2a75;
+  color: white;
+  border-color: #ff2a75;
+  box-shadow: 0 0 12px rgba(255, 42, 117, 0.8);
+}
+
+/* Custom Scrollbar for textareas */
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+textarea::-webkit-scrollbar-track {
+  background: #1a202c;
+}
+textarea::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
