@@ -184,10 +184,11 @@ function buildSystemPrompt({ artist, song, tempo }) {
 ${METHOD_REFERENCE_TEXT}
 
 # 楽曲情報の考慮（最優先）
-入力された曲名【${song || '（未入力）'}】・歌手名【${artist || '（未入力）'}】をもとに、その楽曲特有の
+入力された曲名【${song || '（未入力）'}】・アーティスト名【${artist || '（未入力）'}】をもとに、その楽曲特有の
 音楽的背景や原曲の実際の発音・フレージングを可能な限り考慮して解析すること。
-※歌手名が空欄の場合は、架空の背景を捏造することを厳禁とする。その場合は歌詞の文字構造と
-指定テンポのみを厳格な基準とし、普遍的かつ実践的なアドバイスを記述せよ。
+※アーティスト名が空欄の場合は、生徒のオリジナル曲である可能性が高い。曲名が既存の有名曲と同じでも
+特定の楽曲やアーティストを推測・想定してはならず、架空の背景を捏造することも厳禁とする。
+その場合は歌詞の文字構造と指定テンポのみを厳格な基準とし、普遍的かつ実践的なアドバイスを記述せよ。
 
 # 出力形式（重要：装飾タグは一切使わず、以下のJSONスキーマのみで出力すること。前置き・挨拶・
 コードブロック記号（\`\`\`json など）は一切出力しないこと。必ず有効なJSONのみを返すこと）
@@ -270,7 +271,14 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { artist, song, tempo, lyrics } = req.body || {};
+  const { tempo, lyrics } = req.body || {};
+  const artist = typeof req.body?.artist === 'string' ? req.body.artist.trim() : '';
+  const song = typeof req.body?.song === 'string' ? req.body.song.trim() : '';
+
+  if (!song) {
+    res.status(400).json({ error: '曲名を入力してください。' });
+    return;
+  }
 
   if (!lyrics || !lyrics.trim()) {
     res.status(400).json({ error: '歌詞が入力されていません。' });
@@ -290,44 +298,61 @@ export default async function handler(req, res) {
 
   const systemPrompt = buildSystemPrompt({ artist, song, tempo });
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+  // 優先順位：まず flash-lite で解析し、エラーや結果の形式崩れがあれば flash で再解析する
+  const MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
+
+  const requestBody = JSON.stringify({
+    system_instruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents: [
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: systemPrompt }],
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `以下の英語歌詞を解析してください。\n\n${lyrics}` }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            responseMimeType: 'application/json',
-          },
-        }),
+        role: 'user',
+        parts: [{ text: `以下の英語歌詞を解析してください。\n\n${lyrics}` }],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.4,
+      responseMimeType: 'application/json',
+    },
+  });
+
+  const errors = [];
+
+  for (const model of MODELS) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody,
+        }
+      );
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gemini API error (${response.status}): ${errText.slice(0, 300)}`);
       }
-    );
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Gemini API error:', errText);
-      res.status(502).json({ error: 'Gemini APIとの通信でエラーが発生しました。' });
+      const data = await response.json();
+      const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+      const parsed = extractJson(text);
+
+      if (!parsed.lines || !Array.isArray(parsed.lines) || parsed.lines.length === 0) {
+        throw new Error('解析データの形式が正しくありません');
+      }
+
+      res.status(200).json(parsed);
       return;
+    } catch (err) {
+      // このモデルで失敗 → 次のモデルへ切り替える
+      const msg = `[${model}] ${String(err && err.message ? err.message : err)}`;
+      console.error('otasuke-ai gemini handler error:', msg);
+      errors.push(msg);
     }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const parsed = extractJson(text);
-
-    res.status(200).json(parsed);
-  } catch (err) {
-    console.error('otasuke-ai gemini handler error:', err);
-    res.status(500).json({ error: '解析中にエラーが発生しました。もう一度お試しください。' });
   }
+
+  // すべてのモデルで失敗した場合のみエラーを返す
+  res.status(500).json({ error: '解析中にエラーが発生しました。もう一度お試しください。' });
 }
