@@ -81,6 +81,11 @@ export default function Home() {
     e.preventDefault();
     setErrorMsg('');
 
+    if (!song.trim()) {
+      setErrorMsg('曲名を入力してください。');
+      return;
+    }
+
     if (!lyrics.trim()) return;
 
     if (containsJapanese(lyrics)) {
@@ -90,6 +95,11 @@ export default function Home() {
 
     setLoading(true);
     setResult(null);
+
+    // 分析中の表示が見える位置までスクロール
+    setTimeout(() => {
+      analysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 
     try {
       const res = await fetch('/api/gemini', {
@@ -151,8 +161,7 @@ export default function Home() {
  提供：ボーカル道場K's VOX
 ========================================
 ■ 楽曲情報
-・アーティスト: ${artist || 'Artist'}
-・曲名: ${song || '入力曲'}
+${artist.trim() ? `・アーティスト: ${artist.trim()}\n` : ''}・曲名: ${song.trim()}
 ・テンポ: ${tempo}
 
 ----------------------------------------
@@ -189,16 +198,18 @@ https://www.ksvox.net/
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const sanitizedArtist = (artist || 'Report').replace(/[/\\?%*:|"<>]/g, '_');
-    const sanitizedSong = (song || 'Song').replace(/[/\\?%*:|"<>]/g, '_');
-    link.download = `KsVOX_VocalAnalysis_${sanitizedArtist}_${sanitizedSong}.txt`;
+    const sanitize = (t) => t.replace(/[/\\?%*:|"<>]/g, '_');
+    const namePart = artist.trim()
+      ? `${sanitize(artist.trim())}_${sanitize(song.trim() || 'Song')}`
+      : sanitize(song.trim() || 'Song');
+    link.download = `KsVOX_VocalAnalysis_${namePart}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-  const outputSongLabel = `${artist || 'Artist'}${song ? ' - ' + song : ''} [${tempo}]`;
+  const outputSongLabel = `${artist.trim() ? artist.trim() + ' - ' : ''}${song.trim()} [${tempo}]`;
 
   return (
     <>
@@ -206,6 +217,54 @@ https://www.ksvox.net/
         <title>英語歌唱お助けAI | K&apos;s VOX</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
+
+      <style jsx global>{`
+        .hourglass-flip {
+          display: inline-block;
+          animation: hourglassFlip 2s ease-in-out infinite;
+        }
+        @keyframes hourglassFlip {
+          0%,
+          40% {
+            transform: rotate(0deg);
+          }
+          50%,
+          90% {
+            transform: rotate(180deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+        .loading-dots span {
+          display: inline-block;
+          animation: loadingDot 1.2s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+        .loading-dots span:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+        @keyframes loadingDot {
+          0%,
+          60%,
+          100% {
+            transform: translateY(0);
+            opacity: 0.4;
+          }
+          30% {
+            transform: translateY(-5px);
+            opacity: 1;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hourglass-flip,
+          .loading-dots span {
+            animation: none;
+          }
+        }
+      `}</style>
 
       <div className="max-w-md md:max-w-2xl mx-auto px-4 pt-6 space-y-6">
         {/* HEADER */}
@@ -268,14 +327,13 @@ https://www.ksvox.net/
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-300 mb-1">
-                  ① アーティスト名 <span className="text-vintage-neonPink">*</span>
+                  ① アーティスト名 <span className="text-gray-500 font-normal">(任意)</span>
                 </label>
                 <div className="relative">
                   <i className="fa-solid fa-user-ninja absolute left-3 top-3 text-gray-400 text-sm"></i>
                   <input
                     type="text"
-                    required
-                    placeholder="例: Bruno Mars"
+                    placeholder="例: Bruno Mars（オリジナル曲なら空欄でOK）"
                     value={artist}
                     onChange={(e) => setArtist(e.target.value)}
                     className="w-full bg-slate-900 border border-gray-700 rounded-xl pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-vintage-neonPink transition"
@@ -285,12 +343,13 @@ https://www.ksvox.net/
 
               <div>
                 <label className="block text-xs font-semibold text-gray-300 mb-1">
-                  ② 曲名 <span className="text-gray-500 font-normal">(任意)</span>
+                  ② 曲名 <span className="text-vintage-neonPink">*</span>
                 </label>
                 <div className="relative">
                   <i className="fa-solid fa-compact-disc absolute left-3 top-3 text-gray-400 text-sm"></i>
                   <input
                     type="text"
+                    required
                     placeholder="例: Just the Way You Are"
                     value={song}
                     onChange={(e) => setSong(e.target.value)}
@@ -344,14 +403,22 @@ https://www.ksvox.net/
               disabled={loading}
               className="w-full py-3.5 px-6 rounded-xl font-bold text-white text-base bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 shadow-lg shadow-pink-600/30 transition transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <i className="fa-solid fa-microchip"></i>{' '}
-              {loading ? '解析中...' : 'AI分析を実行する'}
+              {loading ? (
+                <>
+                  <span className="hourglass-flip" aria-hidden="true">⏳</span>
+                  <span>ただ今分析中…</span>
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-microchip"></i> AI分析を実行する
+                </>
+              )}
             </button>
           </form>
         </section>
 
         {/* OUTPUT SECTION */}
-        {result && (
+        {(result || loading) && (
           <section
             ref={analysisRef}
             className="bg-vintage-cream rounded-2xl p-5 md:p-6 text-vintage-textDark shadow-2xl space-y-5 relative border-4 border-amber-900/10"
@@ -369,11 +436,19 @@ https://www.ksvox.net/
             </div>
 
             {loading ? (
-              <div className="py-12 text-center space-y-3">
-                <i className="fa-solid fa-compact-disc fa-spin text-4xl text-pink-600"></i>
-                <p className="text-sm font-bold text-gray-700">
-                  ボーカルメソッドナレッジを照合中...
+              <div className="py-12 text-center space-y-3" role="status" aria-live="polite">
+                <div className="text-5xl leading-none">
+                  <span className="hourglass-flip" aria-hidden="true">⏳</span>
+                </div>
+                <p className="text-base font-bold text-gray-800">
+                  只今分析中
+                  <span className="loading-dots" aria-hidden="true">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                  </span>
                 </p>
+                <p className="text-xs text-gray-500">ボーカルメソッドナレッジを照合しています。少しお待ちください。</p>
               </div>
             ) : (
               <div className="space-y-5">
